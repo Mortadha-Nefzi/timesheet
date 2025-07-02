@@ -36,10 +36,10 @@ pipeline {
                     def mvnHome = tool 'Maven_3.9.6'
                     // The 'withMaven' step allows Jenkins to automatically inject Maven settings.xml
                     // with the credentials defined in Jenkins (ID: nexus-admin-credentials)
-                    withMaven(maven: 'Maven_3.9.6', jdk: 'JDK_17', credentialsId: 'nexus-admin-credentials') {
+                    withMaven(maven: 'Maven_3.9.6', jdk: 'JDK_17', settings: 'nexus-custom-settings') {
                         // Maven deploy command. '-DskipTests' is often used here to skip re-running tests.
                         // Page 20 of 7- Nexus.pdf mentions "skipper les tests" here.
-                        sh "${mvnHome}/bin/mvn deploy -DskipTests -X"
+                        sh "${mvnHome}/bin/mvn deploy -DskipTests"
                     }
                 }
             }
