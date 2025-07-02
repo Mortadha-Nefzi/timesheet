@@ -39,7 +39,7 @@ pipeline {
                     withMaven(maven: 'Maven_3.9.6', jdk: 'JDK_17', credentialsId: 'nexus-admin-credentials') {
                         // Maven deploy command. '-DskipTests' is often used here to skip re-running tests.
                         // Page 20 of 7- Nexus.pdf mentions "skipper les tests" here.
-                        sh "${mvnHome}/bin/mvn deploy -DskipTests"
+                        sh "${mvnHome}/bin/mvn deploy -DskipTests -X"
                     }
                 }
             }
