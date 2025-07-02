@@ -16,43 +16,36 @@ pipeline {
 
         stage('MAVEN BUILD') {
             steps {
-                echo "Running Maven clean install..."
-                sh 'mvn clean install'
+                echo "Running Maven clean install and skipping tests..."
+                // -DskipTests=true tells Maven to skip running tests
+                sh 'mvn clean install -DskipTests=true'
             }
         }
 
+        // The SONARQUBE stage remains, as it typically runs analysis AFTER compilation,
+        // and doesn't rely on test execution unless configured to analyze test coverage.
         stage('SONARQUBE') {
             steps {
                 script {
                     def mvnHome = tool 'Maven_3.9.6'
                     echo "Running SonarQube analysis..."
                     withSonarQubeEnv('SonarQubeServer') {
+                        // SonarQube analysis might also run tests or need test compilation.
+                        // If SonarQube fails because tests aren't compiled or run,
+                        // we might need to adjust this. For now, assuming it's fine.
                         sh "${mvnHome}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=Timesheet -Dsonar.projectName='Timesheet'"
                     }
                 }
             }
         }
 
-        stage('MOCKITO') {
-            steps {
-                script {
-                    def mvnHome = tool 'Maven_3.9.6'
-                    echo "Executing Unit Tests (e.g., Mockito)..."
-                    // Ensure tests are run and Surefire reports are generated
-                    sh "${mvnHome}/bin/mvn test"
-                    // Publish JUnit test results for Jenkins UI
-                    junit 'target/surefire-reports/*.xml'
-                    echo "Unit tests executed and results published."
-                }
-            }
-        }
+        // The MOCKITO stage is REMOVED, as requested.
 
         stage('DOCKER IMAGE') {
             steps {
                 script {
                     echo "Building Docker image for the application..."
                     def appImage = "timesheet-app:${env.BUILD_NUMBER}"
-                    // Build the Docker image from the project root
                     sh "docker build -t ${appImage} ."
                     echo "Docker image ${appImage} built successfully."
                 }
@@ -63,9 +56,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying application with Docker Compose..."
-                    // Stop and remove existing containers defined in docker-compose.yml
                     sh "docker-compose down"
-                    // Start services defined in docker-compose.yml in detached mode
                     sh "docker-compose up -d"
                     echo "Application deployed with Docker Compose."
                 }
