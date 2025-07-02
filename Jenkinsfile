@@ -2,36 +2,46 @@ pipeline {
     agent any
 
     tools {
-        // Ensure these names match what you configured in Jenkins -> Manage Jenkins -> Tools
-        maven 'Maven_3.9.6' // Replace with your actual Maven tool name if different
-        jdk 'JDK_17' // Replace with your actual JDK tool name if different
+        // IMPORTANT: Replace 'Maven_3.9.6' with the EXACT name you configured for Maven in Jenkins
+        // Go to Manage Jenkins -> Tools -> Maven installations to verify the name.
+        maven 'Maven_3.9.6'
+        // IMPORTANT: Replace 'JDK_17' with the EXACT name you configured for JDK 17 in Jenkins
+        // Go to Manage Jenkins -> Tools -> JDK installations to verify the name.
+        jdk 'JDK_17'
     }
 
     stages {
         stage('Checkout') {
             steps {
+                // Ensure this URL is correct for your GitHub repository
                 git 'https://github.com/Mortadha-Nefzi/timesheet.git'
             }
         }
 
         stage('Build') {
             steps {
-                // We'll remove -DskipTests here so tests can run for SonarQube coverage later
+                // This command builds your project. Removed -DskipTests to allow SonarQube to analyze tests.
                 sh 'mvn clean install'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                // 'withSonarQubeEnv()' is a Jenkins Pipeline step provided by the SonarQube Scanner plugin
-                // It automatically configures the environment variables (like sonar.host.url)
-                // You need to configure the SonarQube server in Jenkins -> Manage Jenkins -> Configure System
-                // (We will do this after updating the Jenkinsfile)
+                // This 'script' block is crucial. It allows for variable declarations (like 'def mvnHome')
+                // within a declarative pipeline's 'steps' section.
+                script {
+                    // This line gets the path to your configured Maven installation.
+                    // Make sure 'Maven_3.9.6' here matches the name you set in Jenkins' global tool configuration.
+                    def mvnHome = tool 'Maven_3.9.6'
 
-                // The 'tool' directive ensures the correct Maven version is used
-                def mvnHome = tool 'Maven_3.9.6' // Use the exact name you configured for Maven
-                withSonarQubeEnv('SonarQubeServer') { // 'SonarQubeServer' is the name we'll give the SonarQube server in Jenkins config
-                    sh "${mvnHome}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=Timesheet -Dsonar.projectName='Timesheet'"
+                    // This step integrates with your SonarQube server.
+                    // 'SonarQubeServer' MUST match the 'Name' you gave your SonarQube instance in
+                    // Jenkins -> Manage Jenkins -> Configure System -> SonarQube servers.
+                    withSonarQubeEnv('SonarQubeServer') {
+                        // This executes the Maven command to run the SonarQube analysis.
+                        // Ensure 'Timesheet' for projectKey and projectName matches what you set in SonarQube.
+                        sh "${mvnHome}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=Timesheet -Dsonar.projectName='Timesheet'"
+                    }
                 }
             }
         }
