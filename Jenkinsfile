@@ -15,6 +15,7 @@ pipeline {
 
         stage('Build') {
             steps {
+                // Ensure no -X flag or other Nexus-specific arguments here
                 sh 'mvn clean install'
             }
         }
@@ -29,20 +30,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy to Nexus') { // <-- NEW STAGE ADDED HERE
-            steps {
-                script {
-                    def mvnHome = tool 'Maven_3.9.6'
-                    // The 'withMaven' step allows Jenkins to automatically inject Maven settings.xml
-                    // with the credentials defined in Jenkins (ID: nexus-admin-credentials)
-                    withMaven(maven: 'Maven_3.9.6', jdk: 'JDK_17', settings: 'nexus-custom-settings') {
-                        // Maven deploy command. '-DskipTests' is often used here to skip re-running tests.
-                        // Page 20 of 7- Nexus.pdf mentions "skipper les tests" here.
-                        sh "${mvnHome}/bin/mvn deploy -DskipTests"
-                    }
-                }
-            }
-        }
+        // The 'Deploy to Nexus' stage is completely removed from here.
     }
 }
