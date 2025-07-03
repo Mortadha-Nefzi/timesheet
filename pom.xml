@@ -60,7 +60,7 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>9.0.9</version> <executions>
+                <version>10.0.2</version> <executions>
                     <execution>
                         <goals>
                             <goal>check</goal>
@@ -72,6 +72,6 @@
                     <nvdApiDelay>6000</nvdApiDelay>
                 </configuration>
             </plugin>
-            </plugins>
+        </plugins>
     </build>
 </project>
