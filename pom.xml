@@ -67,6 +67,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <nvdApiKey>416a1247-c586-4768-8ac0-2e4951de9c8d</nvdApiKey>
+                </configuration>
             </plugin>
             </plugins>
     </build>
