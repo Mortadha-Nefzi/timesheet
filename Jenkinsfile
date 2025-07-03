@@ -23,8 +23,9 @@ pipeline {
 
         stage('MAVEN BUILD') {
             steps {
-                echo "Running Maven clean install and skipping tests..."
-                sh 'mvn clean install -DskipTests=true'
+                echo "Running Maven clean install and OWASP Dependency-Check..."
+                // Added org.owasp:dependency-check-maven:check to the mvn command
+                sh 'mvn clean install org.owasp:dependency-check-maven:check -DskipTests=true'
             }
         }
 
@@ -37,6 +38,22 @@ pipeline {
                         sh "${mvnHome}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=Timesheet -Dsonar.projectName='Timesheet'"
                     }
                 }
+            }
+        }
+
+        // New Stage: OWASP Dependency-Check Report
+        stage('OWASP Dependency-Check Report') {
+            steps {
+                echo 'Publishing OWASP Dependency-Check Report...'
+                // Dependency-Check generates reports in target/dependency-check-report.html by default
+                publishHTML(target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'target', // Report is in target directory
+                    reportFiles: 'dependency-check-report.html',
+                    reportName: 'OWASP Dependency-Check Report'
+                ])
             }
         }
 
@@ -94,9 +111,9 @@ pipeline {
             steps {
                 echo "Grafana and Prometheus monitoring for Jenkins configured."
                 echo "You can now view metrics:"
-                echo "  - Jenkins UI (Prometheus Metrics Plugin): http://192.168.50.4:8080/prometheus"
-                echo "  - Prometheus UI (Targets & Querying): http://192.168.50.4:9090"
-                echo "  - Grafana UI (Dashboards): http://192.168.50.4:3000 (login admin/admin)"
+                echo "  - Jenkins UI (Prometheus Metrics Plugin): http://192.168.50.4:8080/prometheus"
+                echo "  - Prometheus UI (Targets & Querying): http://192.168.50.4:9090"
+                echo "  - Grafana UI (Dashboards): http://192.168.50.4:3000 (login admin/admin)"
             }
         }
     }
@@ -107,10 +124,6 @@ pipeline {
         always {
             script {
                 echo 'Tearing down Docker Compose services to clean up environment...'
-                // Make sure to navigate to the directory containing docker-compose.yml
-                // If it's in your repository root, you might need:
-                // sh 'cd ${env.WORKSPACE} && docker-compose down'
-                // Or simply:
                 sh 'docker-compose down'
             }
         }
